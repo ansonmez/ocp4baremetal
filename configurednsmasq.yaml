@@ -61,6 +61,12 @@
     line: "address=/apps.{{ cluster_name }}.{{ domain_name }}/{{ haproxyip }}"
     state: present
 
+- name : Addlines for router to dnsmasq
+  lineinfile:
+    path: /etc/dnsmasq.conf
+    line: "dhcp-option=option:{{ routerip }}"
+    state: present
+
 - name : Restart dnsmasq
   service:
     name: dnsmasq

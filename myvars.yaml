@@ -24,6 +24,7 @@ ocp_master_vm_tag: asocp42master
 ocp_worker_vm_count: 2
 worker_ips: 192.168.191.223,192.168.191.224
 bootstrap_ip: 192.168.191.219
+routerip: 192.168.191.250
 ocp_master_vm_dns_domain: "{{ domain_name }}"
 cluster: RedHat
 ocp_master_vm_memory: "16GiB"
