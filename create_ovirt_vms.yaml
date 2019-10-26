@@ -1,0 +1,43 @@
+---
+- name: Create VM 
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ vm_name_prefix }}{{ item }}"
+    cluster: "{{ cluster }}"
+    memory: "{{ memory }}"
+    cpu_cores: "{{ cpus }}"
+    high_availability: false
+    stateless: "{{ is_stateless }}"
+    boot_devices:
+      - hd
+      - network
+    state: stopped
+    wait: true
+    nics:
+      - name: nic1
+        profile_name: "{{ nic_profile_name }}"
+  with_sequence: count={{ number_of_vms }}
+
+- name: Add new VM into Ansible inventory
+  add_host:
+    hostname: "{{ vm_name_prefix }}{{ item }}"
+    groups: "{{ node_role }}"
+  with_sequence: count={{ number_of_vms }}
+
+- name: Add disks
+  ovirt_disk:
+    auth: "{{ ovirt_auth }}"
+    bootable: yes
+    vm_name: "{{ vm_name_prefix }}{{ item }}"
+    name: "{{ vm_name_prefix }}{{ item }}"
+    size: "{{ vm_disk_size }}"
+    storage_domain: "{{ vm_storage_domain }}"
+    interface: "{{  disk_interface }}"
+  with_sequence: count={{ number_of_vms }}
+- ovirt_tag:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ vm_tag }}"
+    state: attached
+    vms:
+      - "{{ vm_name_prefix }}{{ item }}"
+  with_sequence: count={{ number_of_vms }}

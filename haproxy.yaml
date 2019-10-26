@@ -1,0 +1,29 @@
+- name : install haproxy
+  yum:
+    name: haproxy
+    state: 'present'
+    update_cache: 'yes'
+
+- name: update haproxy config
+  template:
+    src: templates/haproxy.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: update selinux for port 6443
+  seport:
+    ports: 6443
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: update selinux for port 22623
+  seport:
+    ports: 22623
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name : restart haproxy
+  service:
+    name: haproxy
+    state: restarted

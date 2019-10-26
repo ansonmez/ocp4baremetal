@@ -1,0 +1,41 @@
+- name : install tftp
+  yum:
+    name: tftp-server
+    state: 'present'
+    update_cache: 'yes'
+
+- name : install syslinux
+  yum:
+    name: syslinux
+    state: 'present'
+    update_cache: 'yes'
+
+- name : install xinetd
+  yum:
+    name: xinetd
+    state: 'present'
+    update_cache: 'yes'
+
+- name: create folder
+  file:
+    path: /var/lib/tftpboot
+    state: directory
+    mode: 0755
+
+- name: copy pxelinux file
+  copy:
+    src: /usr/share/syslinux/pxelinux.0
+    dest: /var/lib/tftpboot
+    mode: 0755
+
+- name: copy boot images
+  copy:
+    src: /usr/share/syslinux/linux.c32
+    dest: /var/lib/tftpboot
+    mode: 0755
+
+- name: create folder
+  file:
+    path: /var/lib/tftpboot/pxelinux.cfg
+    state: directory
+    mode: 0755

@@ -1,0 +1,119 @@
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    install_config: "{{ lookup('file', install_config_file) | from_yaml }}"
+    cluster_name: "{{ install_config.metadata.name }}"
+    master_ign_file: "{{ cluster_name }}/master.ign"
+    worker_ign_file: "{{ cluster_name }}/worker.ign"
+    bootstrap_ign_file: "{{ cluster_name }}/bootstrap.ign"
+    http_document_root: "/var/www/html/{{ coreos_inst_ignition_dir }}"
+    bootstrap_ignition_config_url: "http://{{ httpd_ip }}:{{ webport }}/{{ coreos_inst_ignition_dir }}/{{ cluster_name }}_bootstrap.ign"
+  tasks:
+    - name: include variables
+      include_vars: myvars.yaml
+
+    - name: Create new cluster's directory
+      file:
+        path: "{{ cluster_name }}"
+        state: directory
+
+    - name: Put install-config.yaml into cluster directory
+      copy:
+        content: "{{ install_config | to_nice_yaml(indent=2) }}"
+        dest: "{{ cluster_name }}/install-config.yaml"
+
+    - name: Create ignition configs of new cluster
+      command: ./files/openshift-install create ignition-configs --dir={{ cluster_name }}
+
+    - set_fact:
+        master_ip_addresses: "{{ master_ips.split(',') }}"
+        worker_ip_addresses: "{{ worker_ips.split(',') }}"
+        bootstrap_ip_addresses: "{{ bootstrap_ip.split(',') }}"
+
+    - name: Adding httpd server into Ansible's run-time inventory
+      add_host:
+        name: httpd
+        groups: httpservers
+        ansible_host: "{{ httpd_ip }}"
+        ansible_user: root
+
+- name: Prepare HTTP server
+  hosts: localhost
+  gather_facts: no
+  vars:
+    install_config: "{{ lookup('file', install_config_file) | from_yaml }}"
+#    cluster_name: "{{ install_config.metadata.name }}"
+    bootstrap_ign_file: "{{ cluster_name }}/bootstrap.ign"
+    http_document_root: "/var/www/html/{{ coreos_inst_ignition_dir }}"
+    bootstrap_ignition_config_url: "http://{{ httpd_ip }}:{{ webport }}/{{ coreos_inst_ignition_dir }}/bootstrap.ign"
+  tasks: 
+  - name: include variables
+    include_vars: myvars.yaml
+
+  - name: install httpd
+    yum:
+      name: httpd
+      state: 'present'
+      update_cache: 'yes'
+
+  - name: change httpd port
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^Listen '
+      insertafter: '^#Listen '
+      line: "Listen {{ webport }}"
+ 
+  - name: create folder
+    file:
+      path: "/var/www/html/{{ coreos_inst_ignition_dir }}"
+      state: directory
+      mode: 0755
+
+  - name: restart httpd
+    service:
+      name: httpd
+      state: restarted
+      enabled: yes
+
+  - name: stop firewalld
+    service:
+      name: firewalld
+      state: stopped
+      enabled: no
+
+  - name: Copy bootstrap ignition file to http server
+    copy:
+      src: "{{ bootstrap_ign_file }}"
+      dest: "{{ http_document_root }}/bootstrap.ign"
+
+  - name: Copy master ignition file to http server
+    copy:
+      src: "{{ cluster_name }}/master.ign"
+      dest: "{{ http_document_root }}/master.ign"
+
+  - name: Copy master ignition file to http server
+    copy:
+      src: "{{ cluster_name }}/worker.ign"
+      dest: "{{ http_document_root }}/worker.ign"
+  
+  - name: Check that http server is serving bootstrap ignition file
+    uri:
+      url: "{{ bootstrap_ignition_config_url }}"
+      return_content: no
+      status_code: 200
+
+  - name: Copy initramfs.img
+    copy:
+      src: "files/{{ initramfs_path }}"
+      dest: "/var/www/html/{{ otherinstall_dir }}"
+
+  - name: Copy metal bios
+    copy:
+      src: "files/{{ coreos_inst_image_file }}"
+      dest: "/var/www/html/{{ otherinstall_dir }}"
+
+  - name: copy  installer_kernel
+    copy
+      src: "files/{{ installer_kernel }}"
+      dest: "/var/www/html/{{ installer_kernel }}"

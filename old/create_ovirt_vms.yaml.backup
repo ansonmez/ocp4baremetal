@@ -1,0 +1,29 @@
+---
+- name: inc variables
+  include_vars: myvars.yaml
+- name: Obtain SSO token with using username/password credentials
+  no_log: false
+  ovirt_auth:
+    ovirt_auth:
+      url: "{{ ovirt_url }}"
+      username: "{{ ovirt_username }}"
+      password: "{{ ovirt_password }}"
+      insecure: true
+- name: Create VM with cloud init
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ vm_name_prefix}}{{ item }}"
+    cluster: "{{ cluster }}"
+    memory: "{{ memory }}"
+    cpu_cores: "{{ cpus }}"
+    high_availability: false
+    stateless: "{{ is_stateless }}"
+    state: stopped
+    wait: true
+  with_sequence: count={{ number_of_vms }}
+- ovirt_tag:
+    name: "{{ vm_tag }}"
+    state: attached
+    vms:
+      - "{{ vm_name_prefix}}{{ item }}"
+  with_sequence: count={{ number_of_vms }}

@@ -1,0 +1,73 @@
+---
+- name: Create OpenShift Master VMs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vm_name_prefix: "{{ ocp_master_vm_name }}"
+    memory: "{{ ocp_master_vm_memory }}"
+    number_of_vms: "{{ ocp_master_vm_count }}"
+    vm_tag: "{{ ocp_master_vm_tag }}"
+    vm_dns_domain: "{{ ocp_master_vm_dns_domain }}"
+    is_stateless: False
+    vm_disks: "{{ ocp_master_disks }}"
+  tasks:
+  - name: inc variables
+    include_vars: myvars.yaml
+
+  - name: Login to RHV
+    ovirt_auth:
+      url: "{{ ovirt_url }}"
+      username: "{{ ovirt_username }}"
+      password: "{{ ovirt_password }}"
+      insecure: true
+
+  - import_tasks: create_ovirt_vms.yaml
+    vars:
+      vm_name_prefix: bootstrap
+      number_of_vms: 1
+
+  - import_tasks: create_ovirt_vms.yaml 
+    vars:
+      vm_name_prefix: "{{ vm_master_name_prefix }}"
+      number_of_vms: "{{ ocp_master_vm_count }}"
+
+  - import_tasks: create_ovirt_vms.yaml
+    vars:
+      vm_name_prefix: "{{ vm_worker_name_prefix }}"
+      number_of_vms: "{{ ocp_worker_vm_count }}"
+
+  - include_tasks: add_disks.yaml
+    vars:
+      vm_name: "{{ vm_master_name_prefix }}{{ idx }}"
+    with_sequence: count={{ ocp_master_vm_count }}
+    loop_control:
+      loop_var: idx
+
+  - include_tasks: add_disks.yaml
+    vars:
+      vm_name: "{{ vm_worker_name_prefix }}{{ idx }}"
+    with_sequence:
+      count: "{{ ocp_worker_vm_count }}"
+    loop_control:
+      loop_var: idx
+
+  - include_tasks: update_pxeboot.yaml 
+    vars:
+      vm_name: bootstrap
+      ign_type: bootstrap
+
+  - include_tasks: update_pxeboot.yaml
+    vars:
+      vm_name: "{{ vm_master_name_prefix }}{{ idx }}"
+      ign_type: master
+    with_sequence: count={{ ocp_master_vm_count }}
+    loop_control:
+      loop_var: idx
+
+  - include_tasks: update_pxeboot.yaml 
+    vars:
+      vm_name: "{{ vm_worker_name_prefix }}{{ idx }}"
+      ign_type: worker
+    with_sequence: count={{ ocp_worker_vm_count }}
+    loop_control:
+      loop_var: idx

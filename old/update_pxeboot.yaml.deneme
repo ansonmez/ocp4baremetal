@@ -1,0 +1,17 @@
+---
+- name: deneme
+  hosts: localhost
+  tasks:
+  - name: Login to RHV
+    ovirt_auth:
+      url: https://rhev-man.lp.int/ovirt-engine/api
+      username: admin@internal
+      password: mvME)F6aK@vxSH27AVdGf!w2
+      insecure: true
+  - name: mac
+    ovirt_nic_facts:
+      auth: "{{ ovirt_auth }}"
+      vm: bootstrap1
+  - name: get mac  
+    set_fact:
+      mac_address: "{{ ovirt_nics[0]['mac']['address'] }}"

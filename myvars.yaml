@@ -1,0 +1,38 @@
+cluster_name: asocp42test
+domain_name: lp.int
+start_addr: 192.168.191.3
+end_addr: 192.168.191.253
+haproxyip: 192.168.191.178
+httpd_ip: "{{ haproxyip }}"
+webport: 9000
+installer_kernel: rhcos-4.2.0-x86_64-installer-kernel
+initramfs_path: rhcos-4.2.0-x86_64-installer-initramfs.img
+coreos_inst_install_dev: vda
+coreos_inst_image_file: rhcos-4.2.0-x86_64-metal-bios.raw.gz
+coreos_inst_ignition_dir: install_dir
+otherinstall_dir: install_dir
+
+
+ovirt_url: "https://rhev-man.lp.int/ovirt-engine/api"
+ovirt_username: ""
+ovirt_password: ""
+ocp_master_vm_count: 3
+master_ips: 192.168.191.220,192.168.191.221,192.168.191.222
+vm_master_name_prefix: asocp42master
+vm_worker_name_prefix: asocp42worker
+ocp_master_vm_tag: asocp42master
+ocp_worker_vm_count: 2
+worker_ips: 192.168.191.223,192.168.191.224
+bootstrap_ip: 192.168.191.219
+ocp_master_vm_dns_domain: "{{ domain_name }}"
+cluster: RedHat
+ocp_master_vm_memory: "16GiB"
+cpus: 4
+nic_profile_name: vlan_301
+vm_disk_size: 90GiB
+disk_interface: virtio
+vm_storage_domain: data_disk3
+vm_tag: asocp42test
+
+install_config_file: install-config.yaml
+
