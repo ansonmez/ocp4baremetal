@@ -27,17 +27,42 @@
       password: "{{ ovirt_password }}"
       insecure: true
 
+  - name: create bootstrap vm
+    import_tasks: create_ovirt_vms.yaml
+    vars:
+      vm_name_prefix: bootstrap
+      number_of_vms: 1
+
   - name: fact for ips
     set_fact:
       master_ip_addresses: "{{ master_ips.split(',') }}"
       worker_ip_addresses: "{{ worker_ips.split(',') }}"
       bootstrap_ip_addresses: "{{ bootstrap_ip.split(',') }}"
 
-  - name: create bootstrap vm
-    import_tasks: create_ovirt_vms.yaml
-    vars:
-      vm_name_prefix: bootstrap
-      number_of_vms: 1
+  - name: update host file for bootstrap
+    lineinfile:
+      path: /etc/hosts
+      regexp: "bootstrap"
+      line: "{{ bootstrap_ip_addresses[0] }}    bootstrap1 bootstrap1.{{ cluster_name }}.{{ domain_name }}"
+   
+  - name: update host file for masters
+    lineinfile:
+      path: /etc/hosts
+      regexp: "{{ vm_master_name_prefix }}{{ item }}"
+      line: "{{master_ip_addresses[ item | int-1 ]}} {{ vm_master_name_prefix }}{{ item }} {{ vm_master_name_prefix }}{{ item }}.{{ cluster_name }}.{{ domain_name }}"
+    with_sequence: count={{ ocp_master_vm_count }}
+
+  - name: update host file for workers
+    lineinfile:
+      path: /etc/hosts
+      regexp: "{{ vm_worker_name_prefix }}{{ item }}"
+      line: "{{worker_ip_addresses[ item | int-1 ]}} {{ vm_worker_name_prefix }}{{ item }} {{ vm_worker_name_prefix }}{{ item }}.{{ cluster_name }}.{{ domain_name }}"
+    with_sequence: count={{ ocp_worker_vm_count }}
+# dd
+#
+#  - name: Set node role to compute
+#    set_fact:
+#      node_role: master
 
   - name: create master vms
     import_tasks: create_ovirt_vms.yaml 
@@ -46,42 +71,36 @@
       number_of_vms: "{{ ocp_master_vm_count }}"
       node_role: master
 
+  - name: Set node role to worker
+    set_fact:
+      node_role: worker
+
   - name: create worker vms
     import_tasks: create_ovirt_vms.yaml
     vars:
       vm_name_prefix: "{{ vm_worker_name_prefix }}"
       number_of_vms: "{{ ocp_worker_vm_count }}"
-      node_role: worker
   
   - name: install haproxy
     include_tasks: haproxy.yaml
 
-
-
-  - name: update host dnsmasq for dhcp options to fix ips
-    import_tasks: update_pxeboot_dnsmasq.yaml
+  - include_tasks: update_pxeboot.yaml 
     vars:
       vm_name: bootstrap1
       ign_type: bootstrap
-      vmip: "{{ bootstrap_ip_addresses[0] }}"
 
-  - name: update host dnsmasq for dhcp options to fix ips
-    include_tasks: update_pxeboot_dnsmasq.yaml
+  - include_tasks: update_pxeboot.yaml
     vars:
-      vm_name: "{{ vm_master_name_prefix }}{{ item }}"
+      vm_name: "{{ vm_master_name_prefix }}{{ idx }}"
       ign_type: master
-      vmip: "{{master_ip_addresses[ item | int-1 ]}}"
     with_sequence: count={{ ocp_master_vm_count }}
+    loop_control:
+      loop_var: idx
 
-  - name: update host dnsmasq for dhcp options to fix ips
-    include_tasks: update_pxeboot_dnsmasq.yaml
+  - include_tasks: update_pxeboot.yaml 
     vars:
-      vm_name: "{{ vm_worker_name_prefix }}{{ item }}"
+      vm_name: "{{ vm_worker_name_prefix }}{{ idx }}"
       ign_type: worker
-      vmip: "{{worker_ip_addresses[ item | int-1 ]}}"
     with_sequence: count={{ ocp_worker_vm_count }}
-
-  - name : restart haproxy
-    service:
-      name: haproxy
-      state: restarted
+    loop_control:
+      loop_var: idx

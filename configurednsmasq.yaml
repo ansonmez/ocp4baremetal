@@ -55,6 +55,12 @@
     line: read-ethers
     state: present
 
+- name : Addlines for wildcard to dnsmasq
+  lineinfile:
+    path: /etc/dnsmasq.conf
+    line: "address=/apps.{{ cluster_name }}.{{ domain_name }}/{{ haproxyip }}"
+    state: present
+
 - name : Restart dnsmasq
   service:
     name: dnsmasq

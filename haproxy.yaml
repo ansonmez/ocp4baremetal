@@ -22,8 +22,3 @@
     proto: tcp
     setype: http_port_t
     state: present
-
-- name : restart haproxy
-  service:
-    name: haproxy
-    state: restarted

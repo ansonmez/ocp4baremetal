@@ -1,7 +1,3 @@
-#- name: read ip from host file for dnsmasq.conf
-#  vars:
-#    vmip: "{{ lookup('/etc/hosts'
-#    
 - name: collect mac address
   ovirt_nic_facts:
     auth: "{{ ovirt_auth }}"
@@ -26,4 +22,16 @@
 - name: update dhcp-host in dnsmasq for fixed ips for mac
   lineinfile:
     path: /etc/dnsmasq.conf 
-    line: "dhcp-host={{ mac_address }},"
+    line: "dhcp-host={{ vm_name }}"
+
+- name: update host file for bootstrap
+  lineinfile:
+    path: /etc/hosts
+    regexp: "{{ vm_name }}"
+    line: "{{ vmip }}  {{ vm_name }}   {{ vm_name }}.{{ cluster_name }}.{{ domain_name }}"
+
+- name: update host file for bootstrap
+  lineinfile:
+    path: /etc/hosts
+    regexp: "api-int.{{ cluster_name }}.{{ domain_name }}"
+    line: "{{ haproxyip }}  lb.{{ cluster_name }}.{{ domain_name }}  api.{{ cluster_name }}.{{ domain_name }} api-int.{{ cluster_name }}.{{ domain_name }}"
