@@ -81,6 +81,13 @@
       vmip: "{{worker_ip_addresses[ item | int-1 ]}}"
     with_sequence: count={{ ocp_worker_vm_count }}
 
+  - name: update etcd records 
+    lineinfile:
+      path: /etc/hosts
+      regexp: "etcd-{{ item | int-1  }}"
+      line: "{{master_ip_addresses[ item | int-1 ]}}     etcd-{{ item | int-1 }}.{{ cluster_name }}.{{ domain_name }}"
+    with_sequence: count={{ ocp_master_vm_count }}
+
   - name : restart haproxy
     service:
       name: haproxy

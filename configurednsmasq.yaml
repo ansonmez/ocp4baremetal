@@ -64,7 +64,7 @@
 - name : Addlines for router to dnsmasq
   lineinfile:
     path: /etc/dnsmasq.conf
-    line: "dhcp-option=option:{{ routerip }}"
+    line: "dhcp-option=3,{{ routerip }}"
     state: present
 
 - name : Restart dnsmasq
