@@ -3,6 +3,7 @@ domain_name: lp.int
 start_addr: 192.168.191.3
 end_addr: 192.168.191.253
 haproxyip: 192.168.191.178
+reverseipdnsmasq: 1.168.192.in-addr.arpa
 httpd_ip: "{{ haproxyip }}"
 webport: 9000
 installer_kernel: rhcos-4.2.0-x86_64-installer-kernel
@@ -27,7 +28,7 @@ bootstrap_ip: 192.168.191.219
 routerip: 192.168.191.250
 ocp_master_vm_dns_domain: "{{ domain_name }}"
 cluster: RedHat
-ocp_master_vm_memory: "16GiB"
+ocp_master_vm_memory: "4GiB"
 cpus: 4
 nic_profile_name: vlan_301
 vm_disk_size: 90GiB

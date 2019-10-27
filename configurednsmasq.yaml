@@ -16,7 +16,7 @@
     dnsmasq_dhcp_ranges:
       - start_addr: "{{ start_addr }}"
         end_addr: "{{ end_addr }}"
-        lease_time: '8h'
+        lease_time: '10m'
     dnsmasq_srv_hosts:
       - name: "_etcd-server-ssl._tcp.{{ cluster_name }}.{{ domain_name }}"
         target: etcd-0.{{ cluster_name }}.{{ domain_name }}
@@ -54,6 +54,17 @@
     path: /etc/dnsmasq.conf
     line: read-ethers
     state: present
+
+- name : Addlines for reverse
+  lineinfile:
+    path: /etc/dnsmasq.conf
+    line: "server=/{{ reverseipdnsmasq }}/{{ haproxyip }}"
+
+- name : Addlines for local directive
+  lineinfile:
+    path: /etc/dnsmasq.conf
+    line: "local=/{{ cluster_name }}.{{ domain_name }}/"
+ 
 
 - name : Addlines for wildcard to dnsmasq
   lineinfile:
