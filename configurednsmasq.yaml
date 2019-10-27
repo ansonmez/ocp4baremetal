@@ -16,7 +16,7 @@
     dnsmasq_dhcp_ranges:
       - start_addr: "{{ start_addr }}"
         end_addr: "{{ end_addr }}"
-        lease_time: '10m'
+        lease_time: '10h'
     dnsmasq_srv_hosts:
       - name: "_etcd-server-ssl._tcp.{{ cluster_name }}.{{ domain_name }}"
         target: etcd-0.{{ cluster_name }}.{{ domain_name }}
