@@ -1,3 +1,5 @@
+With two playbook , it will prepare bastion host tftpboot for provisioning vms, haproxy as loadbalancer , dnsmasq for dhcp and dns requirement and fixed ips , httpd server for holding installation files , create vms on RHV for installing OCP 4.x as baremetal on RHV. 
+
 DO THESE before start 
 
 
