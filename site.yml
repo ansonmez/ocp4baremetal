@@ -1,0 +1,2 @@
+- import_playbook: create_openshift_vms.yaml
+- import_playbook: ocpbaremetal.yaml
