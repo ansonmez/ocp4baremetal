@@ -27,7 +27,7 @@ mkdir files; cd files; wget https://mirror.openshift.com/pub/openshift-v4/client
 
 PREPARE install-config.yaml CHECK myvars.yaml
 
-ansible-playbook create_openshift_vms.yaml -e ovirt_url=xxxx e ovirt_username=xxxxx -e ovirt_password=''
+ansible-playbook create_openshift_vms.yaml -e ovirt_url=xxxx -e ovirt_username=xxxxx -e ovirt_password=''
 
 ansible-playbook ocpbaremetal.yaml
 
